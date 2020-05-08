@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prédiction du COVID-19</title>
+    <style>
+        * {
+            font-size:30px;
+        }
+    </style>
+</head>
+<body>    
+    <input id="image-selector" type="file">    
+    <button id="predict-button">Prédiction</button>
+    <p style="font-weight:bold">Prédiction: <span id="pred" style="font-weight:bold ; color:red"></span></p>    
+    <p>Normal: <span id="normal-prediction" style="font-weight:bold"></span></p>
+    <p>COVID-19: <span id="covid-prediction" style="font-weight:bold"></span></p>
+	<p>Pneumonie: <span id="pneumonia-prediction" style="font-weight:bold"></span></p>
+    <img id="selected-image" src=""/>
+       
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+        let base64Image;
+        $("#image-selector").change(function() {
+            if (this.files && this.files[0] && this.files[0].name.match(/\.(png)$/) ) {
+                a="data:image/png;base64,";}
+            else if (this.files && this.files[0] && this.files[0].name.match(/\.(jpeg)$/) ) {
+                a="data:image/jpeg;base64,";}
+            else if (this.files && this.files[0] && this.files[0].name.match(/\.(gif)$/) ) {
+                a="data:image/gif;base64,";}
+            else if (this.files && this.files[0] && this.files[0].name.match(/\.(jpg)$/) ) {
+                a="data:image/jpeg;base64,";}
+                        
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let dataURL = reader.result;
+                $('#selected-image').attr("src", dataURL);
+                base64Image = dataURL.replace(a,"");
+                console.log(base64Image);
+            }
+            reader.readAsDataURL($("#image-selector")[0].files[0]);
+            $("#normal-prediction").text("");
+            $("#covid-prediction").text("");
+            $("#pneumonia-prediction").text("");
+        });
+        
+        $("#predict-button").click(function(){
+            let message = {
+                image: base64Image
+            }
+            console.log(message);
+            $.post("http://localhost:5000/predict", JSON.stringify(message), function(response){
+                $("#normal-prediction").text(response.prediction.normal.toFixed(2)+"%");
+                $("#covid-prediction").text(response.prediction.covid.toFixed(2)+"%");
+                $("#pneumonia-prediction").text(response.prediction.pneumonia.toFixed(2)+"%");
+                $("#pred").text(response.prediction.pred);
+                
+                console.log(response);
+            });
+        });       
+    </script>
+</body>
+</html>
